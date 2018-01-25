@@ -1,9 +1,13 @@
 package kapo
 
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
 	"time"
 )
+
+var GenesisBlock = NewBlock([]*Transaction{}, Hash{})
 
 type Block struct {
 	ID           Hash
@@ -30,4 +34,26 @@ func NewBlock(txs []*Transaction, previous Hash) *Block {
 	return block
 }
 
-var GenesisBlock = NewBlock([]*Transaction{}, Hash{})
+func (b *Block) Serialize() ([]byte, error) {
+	var buf bytes.Buffer
+
+	encoder := gob.NewEncoder(&buf)
+
+	err := encoder.Encode(b)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (b *Block) Deserialize(data []byte) error {
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+
+	err := decoder.Decode(b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

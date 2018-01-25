@@ -3,8 +3,7 @@ package kapo
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/gob"
-	"log"
+	"fmt"
 )
 
 type Transaction struct {
@@ -26,14 +25,17 @@ func NewTransaction(recipient string, data []byte) *Transaction {
 }
 
 func (tx *Transaction) hash() Hash {
-	var encoded bytes.Buffer
+	var buf bytes.Buffer
 
-	enc := gob.NewEncoder(&encoded)
+	// TODO: No error checking
+	buf.Write(tx.ID.Bytes())
+	buf.WriteString(tx.Recipient)
+	buf.Write(tx.Signature.Bytes())
+	buf.Write(tx.Data)
 
-	err := enc.Encode(tx)
-	if err != nil {
-		log.Panic(err)
-	}
+	return sha256.Sum256(buf.Bytes())
+}
 
-	return sha256.Sum256(encoded.Bytes())
+func (tx *Transaction) String() string {
+	return fmt.Sprintf("%x | %s | %s", tx.ID, tx.Recipient, string(tx.Data))
 }

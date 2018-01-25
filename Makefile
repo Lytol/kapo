@@ -1,4 +1,5 @@
 BINARY_NAME := kapo
+DEFAULT_DATABASE := kapo.db
 
 all: build
 
@@ -11,3 +12,4 @@ test:
 clean:
 	go clean
 	rm -f $(BINARY_NAME)
+	rm -f $(DEFAULT_DATABASE)

@@ -4,11 +4,30 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 )
 
-const HashSize = sha256.Size
+const (
+	HashSize = sha256.Size
+)
 
-type Hash = [HashSize]byte
+type Hash [HashSize]byte
+
+func NewHash(data []byte) (Hash, error) {
+	var hash Hash
+
+	if len(data) != HashSize {
+		return Hash{}, errors.New("Incorrectly sized hash")
+	}
+
+	copy(hash[0:HashSize], data)
+
+	return hash, nil
+}
+
+func (h Hash) Bytes() []byte {
+	return h[:]
+}
 
 func Int64ToBytes(n int64) []byte {
 	buf := new(bytes.Buffer)
