@@ -35,7 +35,6 @@ Resources
 TODO
 ----
 
-- [ ] Add command for 'head'
 - [ ] Refactor genesis block into something sane
 - [ ] Addresses
 - [ ] Scripting

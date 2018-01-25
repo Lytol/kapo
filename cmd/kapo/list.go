@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show the entire blockchain",
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "Print the entire blockchain",
 	Run: func(cmd *cobra.Command, args []string) {
 		bc, err := kapo.NewBlockchain()
 		if err != nil {

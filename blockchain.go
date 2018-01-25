@@ -26,6 +26,10 @@ func (bc *Blockchain) AddBlock(txs []*Transaction) error {
 	return bc.store.PutBlock(block)
 }
 
+func (bc *Blockchain) Head() (Hash, error) {
+	return bc.store.Head()
+}
+
 type BlockchainIterator struct {
 	blockchain  *Blockchain
 	currentHash Hash
