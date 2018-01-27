@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
+	"encoding/hex"
 )
 
 const (
@@ -13,16 +13,16 @@ const (
 
 type Hash [HashSize]byte
 
-func NewHash(data []byte) (Hash, error) {
+func NewHash(data []byte) Hash {
 	var hash Hash
 
 	if len(data) != HashSize {
-		return Hash{}, errors.New("Incorrectly sized hash")
+		panic("Incorrectly sized hash")
 	}
 
 	copy(hash[0:HashSize], data)
 
-	return hash, nil
+	return hash
 }
 
 func (h Hash) Bytes() []byte {
@@ -38,4 +38,13 @@ func Int64ToBytes(n int64) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+func HexStringToHash(s string) Hash {
+	decoded, err := hex.DecodeString(s)
+	if err != nil {
+		panic("Unable to decode hex string")
+	}
+
+	return NewHash(decoded)
 }

@@ -45,7 +45,7 @@ func (bc *Blockchain) Iterator() *BlockchainIterator {
 }
 
 func (i *BlockchainIterator) Next() *Block {
-	if i.currentHash == GenesisBlock.Previous {
+	if i.currentHash == DefaultGenesisBlock().Previous {
 		return nil
 	}
 

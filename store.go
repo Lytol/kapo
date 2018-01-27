@@ -76,7 +76,7 @@ func (s *Store) ensureGenesisBlock() error {
 	_, err := s.Head()
 	if err != nil {
 		if err == HeadDoesNotExist {
-			s.PutBlock(GenesisBlock)
+			s.PutBlock(DefaultGenesisBlock())
 		} else {
 			return err
 		}
@@ -101,12 +101,7 @@ func (s *Store) Head() (Hash, error) {
 		return Hash{}, HeadDoesNotExist
 	}
 
-	head, err := NewHash(id)
-	if err != nil {
-		return Hash{}, nil
-	}
-
-	return head, nil
+	return NewHash(id), nil
 }
 
 func (s *Store) GetBlock(id Hash) (*Block, error) {
