@@ -8,7 +8,7 @@ import (
 )
 
 type Block struct {
-	ID           Hash
+	Hash         Hash
 	Previous     Hash
 	Timestamp    int64
 	Transactions []*Transaction
@@ -58,7 +58,7 @@ func (b *Block) Deserialize(data []byte) error {
 
 func DefaultGenesisBlock() *Block {
 	return &Block{
-		ID:           HexStringToHash("00000f3c99d0dda758d0fb3d08cf21bc0e03d7275c133e6855914ee5dc1c76e2"),
+		Hash:         HexToHash("00000f3c99d0dda758d0fb3d08cf21bc0e03d7275c133e6855914ee5dc1c76e2"),
 		Previous:     Hash{},
 		Timestamp:    1517089789,
 		Transactions: []*Transaction{},

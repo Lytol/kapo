@@ -26,7 +26,7 @@ var listCmd = &cobra.Command{
 				break
 			}
 
-			fmt.Printf("ID: %x\n", block.ID)
+			fmt.Printf("Hash: %x\n", block.Hash)
 			fmt.Printf("Timestamp: %d\n", block.Timestamp)
 			fmt.Printf("Nonce: %x\n", block.Nonce)
 

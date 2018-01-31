@@ -9,16 +9,10 @@ const (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "kapo",
-	Short: "Kapo is a minimal distributed ledger using a blockchain",
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
+	Use: "kapo",
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(addCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(headCmd)
 }

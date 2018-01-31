@@ -2,7 +2,6 @@ package kapo
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"math"
 	"math/big"
 )
@@ -36,7 +35,7 @@ func (pow *ProofOfWork) Run(block *Block) (*Block, error) {
 	}
 
 	block.Nonce = nonce
-	block.ID = hash
+	block.Hash = hash
 
 	return block, nil
 }
@@ -51,15 +50,15 @@ func (pow *ProofOfWork) hash(block *Block, nonce int64) Hash {
 		Int64ToBytes(nonce),
 	}, []byte{})
 
-	return sha256.Sum256(headers)
+	return SHA(headers)
 }
 
 func (pow *ProofOfWork) transactionsHash(block *Block) Hash {
 	var txHashes [][]byte
 
 	for _, tx := range block.Transactions {
-		txHashes = append(txHashes, tx.ID[:])
+		txHashes = append(txHashes, tx.Hash[:])
 	}
 
-	return sha256.Sum256(bytes.Join(txHashes, []byte{}))
+	return SHA(bytes.Join(txHashes, []byte{}))
 }

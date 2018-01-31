@@ -101,7 +101,7 @@ func (s *Store) Head() (Hash, error) {
 		return Hash{}, HeadDoesNotExist
 	}
 
-	return NewHash(id), nil
+	return ToHash(id), nil
 }
 
 func (s *Store) GetBlock(id Hash) (*Block, error) {
@@ -126,7 +126,7 @@ func (s *Store) GetBlock(id Hash) (*Block, error) {
 }
 
 func (s *Store) PutBlock(block *Block) error {
-	id := block.ID.Bytes()
+	id := block.Hash.Bytes()
 
 	data, err := block.Serialize()
 	if err != nil {

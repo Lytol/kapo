@@ -3,13 +3,16 @@ Kapo
 
 Just messing around with blockchains and distributed ledgers using Go
 
+Usage
+-----
+
+- add : add a transaction to the blockchain (requires private key, account, script, optional data)
 
 Goals
 -----
 
 - Small and minimal, do less
 - Single binary with no runtime dependencies
-- Permissioned writes / public reads
 - Smart contracts
 - Storage oriented (documents, etc)
 
@@ -17,7 +20,7 @@ Goals
 Architecture
 ------------
 
-- [BoltDB](https://github.com/boltdb/bolt) for the ledger database
+- [BoltDB](https://github.com/boltdb/bolt) for the ledger database (transactions, blocks)
 
 
 Resources
@@ -35,8 +38,8 @@ Resources
 TODO
 ----
 
-- [ ] Refactor genesis block into something sane
 - [ ] Addresses
+- [ ] Refactor mining into "seal" per Ethereum
 - [ ] Scripting
 - [ ] Networking
 - [ ] Permissioned blockchain (read all / permissioned write)
