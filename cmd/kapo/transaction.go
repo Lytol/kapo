@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/Lytol/kapo"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +27,15 @@ var newTransactionCmd = &cobra.Command{
 	Short: "Create a new transaction",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO
-		fmt.Println("TODO")
+		addr, err := kapo.HexToAddress(address)
+		if err != nil {
+			log.Fatalf("Invalid address: %s\n", address)
+		}
+
+		data := []byte(args[0])
+
+		tx := kapo.NewTransaction(addr, data)
+
+		fmt.Println(tx)
 	},
 }

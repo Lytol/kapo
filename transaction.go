@@ -8,44 +8,67 @@ import (
 type Transaction struct {
 	Hash      Hash
 	Address   Address
-	Script    []byte
 	Data      []byte
-	Signature Signature
+	Signature *Signature
 }
 
-func NewTransaction(addr Address, script []byte, data []byte) *Transaction {
+func NewTransaction(addr Address, data []byte) *Transaction {
 	tx := &Transaction{
 		Address: addr,
-		Script:  script,
 		Data:    data,
 	}
-
-	tx.Hash = tx.getHash()
 
 	return tx
 }
 
 func (tx *Transaction) Sign(priv *PrivateKey) error {
+	var err error
+	var buf bytes.Buffer
+
+	// TODO: No error checking, extract method
+	buf.Write(tx.Address.Bytes())
+	buf.Write(tx.Data)
+
+	h := SHA(buf.Bytes())
+
+	tx.Signature, err = Sign(h, priv)
+	if err != nil {
+		return err
+	}
+
+	tx.Hash = tx.getHash()
+
 	return nil
 }
 
 func (tx *Transaction) getHash() Hash {
 	var buf bytes.Buffer
 
-	// TODO: No error checking
+	// TODO: No error checking, extract method
 	buf.Write(tx.Address.Bytes())
-	buf.Write(tx.Script)
 	buf.Write(tx.Data)
+	buf.Write(tx.Signature.Bytes())
 
 	return SHA(buf.Bytes())
 }
 
 func (tx *Transaction) String() string {
-	return fmt.Sprintf(`
-	Transaction(%x)
-	Address: %x
-	Signature: %x
-	Script: %s
-	Data: %s
-`, tx.Hash, tx.Address.Hex(), tx.Signature.Hex(), string(tx.Script), string(tx.Data))
+	str := fmt.Sprintf(`Transaction
+  Hash:    %s
+  Address: %s
+  Data:    %s`,
+		tx.Hash.Hex(),
+		tx.Address.Hex(),
+		string(tx.Data))
+
+	if tx.Signature != nil {
+		str = str + "\n  Signed:  ✔"
+	} else {
+		str = str + "\n  Signed:  ✖"
+	}
+
+	// TODO: Show verified yes/no
+	// TODO: Show signature if signed
+
+	return str
 }

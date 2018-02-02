@@ -1,11 +1,14 @@
 package kapo
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"math/big"
 )
 
@@ -15,21 +18,23 @@ var (
 )
 
 const (
-	HashSize       = sha256.Size
-	CurveKeySize   = 32 // ECDSA P256 Curve
-	PrivateKeySize = CurveKeySize
-	PublicKeySize  = CurveKeySize
-	SignatureSize  = CurveKeySize
-	AddressSize    = sha256.Size
+	HashSize          = sha256.Size
+	CurveKeySize      = 32 // ECDSA P256 Curve
+	PrivateKeySize    = CurveKeySize
+	PublicKeySize     = CurveKeySize * 2
+	SignatureHashSize = CurveKeySize * 2
+	AddressSize       = sha256.Size
 )
 
 //
 // Hash
 //
 
+var EmptyHash = Hash{}
+
 type Hash [HashSize]byte
 
-func ToHash(data []byte) Hash {
+func NewHash(data []byte) Hash {
 	var hash Hash
 
 	if len(data) != HashSize {
@@ -42,6 +47,7 @@ func ToHash(data []byte) Hash {
 }
 
 func (h Hash) Bytes() []byte { return h[:] }
+func (h Hash) Hex() string   { return fmt.Sprintf("%x", h) }
 
 func HexToHash(s string) Hash {
 	decoded, err := hex.DecodeString(s)
@@ -49,7 +55,7 @@ func HexToHash(s string) Hash {
 		panic("Unable to decode hex string")
 	}
 
-	return ToHash(decoded)
+	return NewHash(decoded)
 }
 
 //
@@ -57,7 +63,7 @@ func HexToHash(s string) Hash {
 //
 
 type PrivateKey struct {
-	*ecdsa.PrivateKey
+	key *ecdsa.PrivateKey
 }
 
 func NewPrivateKey() (*PrivateKey, error) {
@@ -66,14 +72,14 @@ func NewPrivateKey() (*PrivateKey, error) {
 }
 
 func (p *PrivateKey) Bytes() []byte {
-	return paddedBigBytes(p.D, CurveKeySize)
+	return paddedBigBytes(p.key.D, CurveKeySize)
 }
 
 func (p *PrivateKey) Hex() string    { return string(p.Bytes()) }
 func (p *PrivateKey) String() string { return p.Hex() }
 
 func (p *PrivateKey) PublicKey() *PublicKey {
-	return &PublicKey{p.Public().(*ecdsa.PublicKey)}
+	return &PublicKey{p.key.Public().(*ecdsa.PublicKey)}
 }
 
 //
@@ -81,13 +87,13 @@ func (p *PrivateKey) PublicKey() *PublicKey {
 //
 
 type PublicKey struct {
-	*ecdsa.PublicKey
+	key *ecdsa.PublicKey
 }
 
 // Zero-padded, big endian X + Zero-padded, big endian Y
 func (p *PublicKey) Bytes() []byte {
-	x := paddedBigBytes(p.X, CurveKeySize)
-	y := paddedBigBytes(p.Y, CurveKeySize)
+	x := paddedBigBytes(p.key.X, CurveKeySize)
+	y := paddedBigBytes(p.key.Y, CurveKeySize)
 
 	return append(x, y...)
 }
@@ -101,7 +107,8 @@ func (p *PublicKey) Address() Address {
 
 func PublicKeyToAddress(pub *PublicKey) Address {
 	hash := SHA(pub.Bytes())
-	return ToAddress(hash.Bytes())
+	addr, _ := NewAddress(hash.Bytes())
+	return addr
 }
 
 //
@@ -110,36 +117,53 @@ func PublicKeyToAddress(pub *PublicKey) Address {
 
 type Address [AddressSize]byte
 
-func ToAddress(data []byte) Address {
+func NewAddress(data []byte) (Address, error) {
 	var addr Address
 
 	if len(data) != AddressSize {
-		panic("Incorrectly sized hash")
+		return addr, errors.New("Incorrectly sized hash")
 	}
 
 	copy(addr[0:AddressSize], data)
 
-	return addr
+	return addr, nil
+}
+
+func HexToAddress(str string) (Address, error) {
+	b, err := HexToBytes(str)
+	if err != nil {
+		return Address{}, err
+	}
+
+	return NewAddress(b)
 }
 
 func (a Address) Bytes() []byte  { return a[:] }
-func (a Address) Hex() string    { return string(a.Bytes()) }
+func (a Address) Hex() string    { return fmt.Sprintf("%x", a.Bytes()) }
 func (a Address) String() string { return a.Hex() }
 
 //
 // Signature
 //
 
-type Signature [SignatureSize]byte
-
-func (s Signature) ToECDSA() (*big.Int, *big.Int) {
-	// TODO: concat r + s as 32-byte each
-	return nil, nil
+type Signature struct {
+	R         *big.Int
+	S         *big.Int
+	PublicKey *PublicKey
 }
 
-func (s Signature) Bytes() []byte  { return s[:] }
-func (s Signature) Hex() string    { return string(s.Bytes()) }
-func (s Signature) String() string { return s.Hex() }
+func (s *Signature) Bytes() []byte {
+	var buf bytes.Buffer
+
+	buf.Write(paddedBigBytes(s.R, CurveKeySize))
+	buf.Write(paddedBigBytes(s.S, CurveKeySize))
+	buf.Write(s.PublicKey.Bytes())
+
+	return buf.Bytes()
+}
+
+func (s *Signature) Hex() string    { return string(s.Bytes()) }
+func (s *Signature) String() string { return s.Hex() }
 
 //
 // Utility functions
@@ -149,12 +173,16 @@ func SHA(b []byte) Hash {
 	return sha256.Sum256(b)
 }
 
-func Sign(priv *PrivateKey, hash Hash) ([]byte, error) {
-	// TODO
-	return nil, nil
+func Sign(hash Hash, priv *PrivateKey) (*Signature, error) {
+	r, s, err := ecdsa.Sign(DefaultRand, priv.key, hash.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return &Signature{r, s, priv.PublicKey()}, nil
 }
 
-func Verify(pub *PublicKey, hash Hash, sig Signature) bool {
+func Verify(hash Hash, sig Signature) bool {
 	// TODO
 	return false
 }

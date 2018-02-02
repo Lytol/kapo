@@ -101,7 +101,7 @@ func (s *Store) Head() (Hash, error) {
 		return Hash{}, HeadDoesNotExist
 	}
 
-	return ToHash(id), nil
+	return NewHash(id), nil
 }
 
 func (s *Store) GetBlock(id Hash) (*Block, error) {

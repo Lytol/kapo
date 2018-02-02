@@ -45,3 +45,29 @@ TODO
 - [ ] Permissioned blockchain (read all / permissioned write)
 - [ ] Proof of work is probably not the right consensus mechanism. Research proof of stake and other consensus algo's that incentivize storing and verifying transactions and documents.
 - [ ] Merkle tree
+
+
+Notes
+-----
+
+Transactions:
+
+  Creation:
+
+    - Signature = SIGN(Hash(Address + Script + Data)) + PubKey
+    - Hash = Hash(Address + Script + Data + Signature)
+
+  Verification:
+    - Ensure Hash
+    - Ensure signature from public key
+    - Ensure account from public key
+
+Blocks:
+
+  Creation
+    - Hash = Hash(Tx1.Hash + Tx2.Hash + ... + TxN.Hash)
+    - Consensus: PoW, etc
+
+  Verification
+    - Ensure Hash
+    - Ensure PoW
