@@ -39,6 +39,7 @@ TODO
 ----
 
 - [ ] Addresses
+- [ ] Refactor crypto into its own package
 - [ ] Refactor mining into "seal" per Ethereum
 - [ ] Scripting
 - [ ] Networking

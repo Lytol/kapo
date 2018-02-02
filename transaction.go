@@ -41,6 +41,10 @@ func (tx *Transaction) Sign(priv *PrivateKey) error {
 	return nil
 }
 
+func (tx *Transaction) HasSignature() bool {
+	return tx.Hash != EmptyHash && tx.Signature != nil
+}
+
 func (tx *Transaction) getHash() Hash {
 	var buf bytes.Buffer
 
@@ -61,7 +65,7 @@ func (tx *Transaction) String() string {
 		tx.Address.Hex(),
 		string(tx.Data))
 
-	if tx.Signature != nil {
+	if tx.HasSignature() {
 		str = str + "\n  Signed:  ✔"
 	} else {
 		str = str + "\n  Signed:  ✖"
