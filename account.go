@@ -24,8 +24,8 @@ func NewAccount() (*Account, error) {
 
 func (a *Account) String() string {
 	return fmt.Sprintf(`Account
-  Address:    %x
-  PrivateKey: %x
-  PublicKey:  %x`,
+  Address:    %s
+  PrivateKey: %s
+  PublicKey:  %s`,
 		a.Address.Hex(), a.PrivateKey.Hex(), a.PublicKey.Hex())
 }

@@ -71,11 +71,37 @@ func NewPrivateKey() (*PrivateKey, error) {
 	return &PrivateKey{key}, err
 }
 
+func BytesToPrivateKey(d []byte) (*PrivateKey, error) {
+	if len(d) != CurveKeySize {
+		return nil, errors.New("Invalid key length")
+	}
+
+	priv := new(ecdsa.PrivateKey)
+	priv.PublicKey.Curve = DefaultCurve
+	priv.D = new(big.Int).SetBytes(d)
+	priv.PublicKey.X, priv.PublicKey.Y = priv.PublicKey.Curve.ScalarBaseMult(d)
+
+	if priv.PublicKey.X == nil || priv.PublicKey.Y == nil {
+		return nil, errors.New("invalid private key")
+	}
+
+	return &PrivateKey{priv}, nil
+}
+
+func HexToPrivateKey(str string) (*PrivateKey, error) {
+	b, err := HexToBytes(str)
+	if err != nil {
+		return nil, err
+	}
+
+	return BytesToPrivateKey(b)
+}
+
 func (p *PrivateKey) Bytes() []byte {
 	return paddedBigBytes(p.key.D, CurveKeySize)
 }
 
-func (p *PrivateKey) Hex() string    { return string(p.Bytes()) }
+func (p *PrivateKey) Hex() string    { return fmt.Sprintf("%x", p.Bytes()) }
 func (p *PrivateKey) String() string { return p.Hex() }
 
 func (p *PrivateKey) PublicKey() *PublicKey {
@@ -98,7 +124,7 @@ func (p *PublicKey) Bytes() []byte {
 	return append(x, y...)
 }
 
-func (p *PublicKey) Hex() string    { return string(p.Bytes()) }
+func (p *PublicKey) Hex() string    { return fmt.Sprintf("%x", p.Bytes()) }
 func (p *PublicKey) String() string { return p.Hex() }
 
 func (p *PublicKey) Address() Address {
@@ -162,7 +188,7 @@ func (s *Signature) Bytes() []byte {
 	return buf.Bytes()
 }
 
-func (s *Signature) Hex() string    { return string(s.Bytes()) }
+func (s *Signature) Hex() string    { return fmt.Sprintf("%x", s.Bytes()) }
 func (s *Signature) String() string { return s.Hex() }
 
 //
@@ -182,9 +208,8 @@ func Sign(hash Hash, priv *PrivateKey) (*Signature, error) {
 	return &Signature{r, s, priv.PublicKey()}, nil
 }
 
-func Verify(hash Hash, sig Signature) bool {
-	// TODO
-	return false
+func Verify(hash Hash, sig *Signature) bool {
+	return ecdsa.Verify(sig.PublicKey.key, hash.Bytes(), sig.R, sig.S)
 }
 
 const (
@@ -211,4 +236,23 @@ func paddedBigBytes(num *big.Int, n int) []byte {
 	}
 
 	return data
+}
+
+func HexToBytes(s string) ([]byte, error) {
+	if len(s) > 1 {
+		if s[0:2] == "0x" || s[0:2] == "0X" {
+			s = s[2:]
+		}
+	}
+
+	if len(s)%2 == 1 {
+		s = "0" + s
+	}
+
+	decoded, err := hex.DecodeString(s)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return decoded, nil
 }
